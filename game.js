@@ -129,7 +129,7 @@
     sfx('ui_start');
     state.playerCount = count; state.level = 0; state.score = 0; state.upgrades = []; state.boss5Defeated = false; state.finalBossDefeated = false;
     state.players = [makePlayer(0), makePlayer(1)]; state.players[1].active = count === 2;
-    $('#p2Hud').classList.toggle('hidden', count !== 2); loadP2Mapping(); showScreen(null); startLevel(1); updateHud();
+    $('#p2Hud').classList.toggle('hidden', count !== 2); document.querySelectorAll('.pilot-profile').forEach((card, index) => card.classList.toggle('selected', index < count && index < 2)); dispatchEvent(new CustomEvent('void-player-count', { detail: { count } })); loadP2Mapping(); showScreen(null); startLevel(1); dispatchEvent(new Event('void-game-started')); updateHud();
   }
 
   function buildQueue(config) { const queue = []; Object.entries(config || {}).forEach(([type, count]) => { for (let i = 0; i < count; i++) queue.push(type); }); return shuffle(queue); }
@@ -184,7 +184,7 @@
     }); if (key === 'shield') state.players.filter(p => p.active).forEach(p => sfx('player_shield', { player: p.id })); if (key === 'health') state.players.filter(p => p.active).forEach(p => sfx('player_heal', { player: p.id })); showScreen(null); startLevel(state.level + 1);
   }
 
-  function submitRecord(completed = false) { if (!window.VoidRanking) return; window.VoidRanking.submit({ name: localStorage.getItem('void-runner-pilot-name') || 'Piloto anónimo', highestLevel: state.level, maxScore: Math.floor(state.score), boss5Defeated: state.boss5Defeated, finalBossDefeated: state.finalBossDefeated, campaignCompleted: completed, playerCount: state.playerCount }).then(() => dispatchEvent(new Event('void-ranking-updated'))).catch(() => {}); }
+  function submitRecord(completed = false) { if (!window.VoidRanking) return; window.VoidRanking.submit({ name: localStorage.getItem('spaceShooter.player1Name') || localStorage.getItem('void-runner-pilot-name') || 'Piloto 1', highestLevel: state.level, maxScore: Math.floor(state.score), boss5Defeated: state.boss5Defeated, finalBossDefeated: state.finalBossDefeated, campaignCompleted: completed, playerCount: state.playerCount }).then(() => dispatchEvent(new Event('void-ranking-updated'))).catch(() => {}); }
   function gameOver(reason = 'El escuadrón fue destruido.') { state.mode = 'gameover'; submitRecord(false); setMusic('gameover'); sfx('ui_gameover'); ui.reason.textContent = reason; ui.finalScore.textContent = String(state.score).padStart(6, '0'); showScreen(ui.gameOver); }
   function victory() { state.mode = 'victory'; state.finalBossDefeated = true; submitRecord(true); state.flash = 1000; setMusic('victory'); sfx('ui_victory'); ui.victoryScore.textContent = String(state.score).padStart(6, '0'); showScreen(ui.victory); }
   function togglePause() { if (!['playing', 'intro', 'paused'].includes(state.mode)) return; if (state.mode === 'paused') { state.mode = state.pausedFrom; audio.resumeMusic(); sfx('ui_resume'); showScreen(null); } else { state.pausedFrom = state.mode; state.mode = 'paused'; state.keys.clear(); audio.pauseMusic(); sfx('ui_pause'); showScreen(ui.pause); } }
@@ -273,6 +273,7 @@
 
   function playerDirection(player, pad) {
     let x = 0, y = 0; if (player.id === 0) { if (state.keys.has('a') || state.keys.has('arrowleft')) x--; if (state.keys.has('d') || state.keys.has('arrowright')) x++; if (state.keys.has('w') || state.keys.has('arrowup')) y--; if (state.keys.has('s') || state.keys.has('arrowdown')) y++; }
+    if (player.id === 0) { const mobile = window.VoidMobile?.getVector(); if (mobile?.active) { x = mobile.x; y = mobile.y; } }
     if (pad) { const px = Math.abs(pad.axes[0] || 0) > .18 ? pad.axes[0] : 0; const py = Math.abs(pad.axes[1] || 0) > .18 ? pad.axes[1] : 0; if (px || py) { x = px; y = py; } }
     const length = Math.hypot(x, y); return length ? { x: x / Math.max(1, length), y: y / Math.max(1, length) } : { x: 0, y: 0 };
   }
@@ -449,7 +450,7 @@
     ui.score.textContent = String(Math.floor(state.score)).padStart(6, '0'); ui.level.textContent = state.level || '—'; ui.levelName.textContent = state.level ? LEVELS[state.level - 1].name : 'EN ESPERA';
     state.players.forEach((p, i) => { const n = i + 1; $(`#p${n}HealthBar`).style.width = `${clamp(p.health / p.maxHealth, 0, 1) * 100}%`; $(`#p${n}HealthValue`).textContent = Math.ceil(p.health); $(`#p${n}UltiBar`).style.width = `${p.ulti}%`; $(`#p${n}UltiValue`).textContent = p.ulti >= 100 ? 'LISTA' : `${Math.floor(p.ulti)}%`; const dash = 1 - clamp(p.dashCooldown / p.dashBase, 0, 1); $(`#p${n}DashBar`).style.width = `${dash * 100}%`; $(`#p${n}DashValue`).textContent = dash >= 1 ? 'LISTO' : `${(p.dashCooldown / 1000).toFixed(1)}s`; $(`#p${n}State`).textContent = p.dead ? (p.reviveProgress > 0 ? `REVIVIENDO ${Math.floor(p.reviveProgress / 18)}%` : 'CAÍDO') : state.synergy ? 'ENLAZADO' : p.shield ? `ESCUDO ${p.shield}` : 'ACTIVO'; });
     if (state.boss) { ui.bossPhase.textContent = `FASE ${state.boss.phase}`; const ratio = state.boss.type === 'devourer' ? state.boss.health / state.boss.maxHealth : state.boss.health / state.boss.maxHealth; ui.bossBar.style.width = `${clamp(ratio, 0, 1) * 100}%`; }
-    if (state.objective) ui.objectiveBar.style.width = `${state.objective.health / state.objective.maxHealth * 100}%`;
+    if (state.objective) ui.objectiveBar.style.width = `${state.objective.health / state.objective.maxHealth * 100}%`; document.querySelector('.touch-ulti')?.classList.toggle('ready', state.players[0].ulti >= 100);
   }
 
   function drawBackground() {

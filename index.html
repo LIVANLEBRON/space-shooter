@@ -50,6 +50,11 @@
 
     <section id="startScreen" class="screen visible">
       <div class="panel menu-panel">
+        <section id="pilotRoster" class="pilot-roster" aria-label="Pilotos">
+          <article class="pilot-profile selected" data-pilot="1"><span class="pilot-ship">▲</span><div><small>PILOTO 1</small><strong id="pilotCardName1">Piloto 1</strong><em id="pilotCardStatus1">ACTIVO · TECLADO</em></div><button class="pilot-edit" data-edit-pilot="1" data-skip-gamepad type="button" aria-label="Editar Piloto 1">✎</button></article>
+          <article class="pilot-profile" data-pilot="2"><span class="pilot-ship">▲</span><div><small>PILOTO 2</small><strong id="pilotCardName2">Piloto 2</strong><em id="pilotCardStatus2">DISPONIBLE</em></div><button class="pilot-edit" data-edit-pilot="2" data-skip-gamepad type="button" aria-label="Editar Piloto 2">✎</button></article>
+          <article class="pilot-profile reserve" data-pilot="3"><span class="pilot-ship">◇</span><div><small>PILOTO 3</small><strong id="pilotCardName3">Piloto 3</strong><em>PERFIL DISPONIBLE</em></div><button class="pilot-edit" data-edit-pilot="3" data-skip-gamepad type="button" aria-label="Editar Piloto 3">✎</button></article>
+        </section>
         <p class="eyebrow">CAMPAÑA COOPERATIVA — 10 NIVELES</p>
         <h1>VOID<br><span>RUNNER</span></h1>
         <p class="lead">La última línea de defensa empieza aquí.</p>
@@ -88,7 +93,24 @@
       </div>
     </section>
 
-    <section id="optionsScreen" class="screen" aria-hidden="true"><div class="panel options-panel"><p class="eyebrow">CONFIGURACIÓN LOCAL</p><h2>OPCIONES</h2><label for="pilotName">NOMBRE DEL PILOTO<input id="pilotName" maxlength="20" autocomplete="off" value="Piloto anónimo"></label><label for="touchMode">CONTROLES TÁCTILES<select id="touchMode"><option value="auto">Automático</option><option value="on">Activados</option><option value="off">Desactivados</option></select></label><p class="hint">El nombre y esta preferencia se guardan solo en este navegador.</p><p class="menu-help">STICK / CRUCETA: MOVER · A: EDITAR / CONFIRMAR · B: VOLVER</p><button id="closeOptionsButton" type="button">GUARDAR Y VOLVER</button></div></section>
+    <section id="optionsScreen" class="screen" aria-hidden="true"><div class="panel options-panel"><p class="eyebrow">CONFIGURACIÓN LOCAL</p><h2>OPCIONES</h2>
+      <section class="pilot-editor"><h3>PILOTOS</h3><div class="pilot-name-grid"><label for="pilotName1">PILOTO 1<input id="pilotName1" maxlength="20" autocomplete="off"></label><label for="pilotName2">PILOTO 2<input id="pilotName2" maxlength="20" autocomplete="off"></label><label for="pilotName3">PILOTO 3<input id="pilotName3" maxlength="20" autocomplete="off"></label></div></section>
+      <section id="mobileSettings" class="mobile-settings" aria-labelledby="mobileSettingsTitle"><h3 id="mobileSettingsTitle">CONTROLES MÓVILES</h3>
+        <button id="mobileFullscreenButton" class="secondary-button" type="button">ENTRAR EN PANTALLA COMPLETA</button>
+        <div class="mobile-options-grid">
+          <label for="mobileOrientation">ORIENTACIÓN<select id="mobileOrientation"><option value="auto">Automática</option><option value="landscape">Horizontal</option><option value="portrait">Vertical</option></select></label>
+          <label for="mobileMovement">MÉTODO DE MOVIMIENTO<select id="mobileMovement"><option value="tilt">Inclinación</option><option value="joystick">Joystick táctil</option></select></label>
+          <label for="mobileSensitivity">SENSIBILIDAD<select id="mobileSensitivity"><option value="low">Baja</option><option value="medium">Media</option><option value="high">Alta</option></select></label>
+          <label for="mobileDeadzone">ZONA MUERTA<select id="mobileDeadzone"><option value="small">Pequeña</option><option value="medium">Media</option><option value="large">Grande</option></select></label>
+          <label for="mobileInvertY">INVERTIR EJE VERTICAL<select id="mobileInvertY"><option value="no">No</option><option value="yes">Sí</option></select></label>
+          <label for="touchMode">CONTROLES TÁCTILES<select id="touchMode"><option value="auto">Automático</option><option value="on">Activados</option><option value="off">Desactivados</option></select></label>
+          <label for="mobileButtonSize">TAMAÑO DE BOTONES<select id="mobileButtonSize"><option value="small">Pequeño</option><option value="medium">Mediano</option><option value="large">Grande</option></select></label>
+          <label for="mobileOpacity">OPACIDAD<select id="mobileOpacity"><option value="30">30 %</option><option value="45">45 %</option><option value="60">60 %</option></select></label>
+        </div>
+        <div class="mobile-setting-actions"><button id="mobileSensorButton" class="secondary-button" type="button">ACTIVAR PERMISO DEL SENSOR</button><button id="mobileCalibrateButton" class="secondary-button" type="button">CALIBRAR INCLINACIÓN</button><button id="mobileResetButton" class="secondary-button" type="button">RESTABLECER CONTROLES MÓVILES</button></div>
+        <p id="mobileSensorStatus" class="hint">Sensor sin activar.</p>
+      </section>
+      <p class="hint">Los nombres y preferencias se guardan en este navegador.</p><p class="menu-help">STICK / CRUCETA: MOVER · A: EDITAR / CONFIRMAR · B: VOLVER</p><button id="closeOptionsButton" type="button">GUARDAR Y VOLVER</button></div></section>
 
     <section id="rankingScreen" class="screen" aria-hidden="true"><div class="panel ranking-panel"><p class="eyebrow">REGISTRO DE CAMPAÑA</p><h2>RANKING</h2><div class="ranking-table"><div class="ranking-head"><span>#</span><span>PILOTO</span><span>NIVEL</span><span>PUNTOS</span><span>MODO</span></div><ol id="rankingList"><li class="empty-rank">Ranking no disponible</li></ol></div><p class="menu-help">STICK / CRUCETA: DESPLAZAR · B: VOLVER</p><button id="closeRankingButton" type="button">VOLVER</button></div></section>
 
@@ -110,8 +132,9 @@
 
     <div id="networkToast" class="network-toast" role="status" aria-live="polite"></div>
     <div id="touchControls" class="touch-controls" aria-label="Controles táctiles">
-      <div class="touch-dpad"><button data-key="w" aria-label="Arriba">▲</button><button data-key="a" aria-label="Izquierda">◀</button><button data-key="s" aria-label="Abajo">▼</button><button data-key="d" aria-label="Derecha">▶</button></div>
-      <div class="touch-actions"><button id="touchPauseButton">PAUSA</button><button data-key="shift">DASH</button><button data-key="e">ESP.</button><button data-key="q">ULTI</button><button class="touch-fire" data-key=" ">FUEGO</button></div>
+      <button id="touchPauseButton" class="touch-pause" type="button" aria-label="Pausa">Ⅱ</button>
+      <div id="touchJoystick" class="touch-joystick" aria-label="Joystick de movimiento"><i id="touchJoystickKnob"></i></div>
+      <div class="touch-actions"><button class="touch-special" data-key="e" aria-label="Especial">E<small>ESP.</small></button><button class="touch-ulti" data-key="q" aria-label="Ulti">U<small>ULTI</small></button><button class="touch-dash" data-key="shift" aria-label="Dash">D<small>DASH</small></button><button class="touch-fire" data-key=" " aria-label="Disparo">●<small>FUEGO</small></button></div>
     </div>
 
     <div class="scanlines" aria-hidden="true"></div>
@@ -119,6 +142,7 @@
   <script src="audio.js"></script>
   <script src="firebase-config.js"></script>
   <script src="ranking.js"></script>
+  <script src="mobile.js"></script>
   <script src="game.js"></script>
   <script src="interface.js"></script>
 </body>

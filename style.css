@@ -167,6 +167,68 @@ button b { margin-left: 18px; font-size: 14px; }
   h1 { font-size: clamp(52px, 15vh, 92px); }
 }
 
+/* Perfiles: compactos y visibles en la cabecera del menú */
+.pilot-roster { position: absolute; top: 16px; left: 50%; width: min(820px, calc(100vw - 32px)); display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; transform: translateX(-50%); }
+.pilot-profile { min-width: 0; display: grid; grid-template-columns: 30px 1fr 30px; align-items: center; gap: 8px; padding: 7px 9px; border: 1px solid rgba(85,125,180,.28); background: rgba(5,12,29,.72); text-align: left; }
+.pilot-profile.selected { border-color: rgba(66,245,233,.62); box-shadow: inset 0 0 20px rgba(66,245,233,.08); }
+.pilot-profile:nth-child(2).selected { border-color: rgba(207,138,255,.65); }
+.pilot-profile.reserve { opacity: .72; }
+.pilot-ship { color: var(--cyan); font-size: 22px; text-align: center; text-shadow: 0 0 12px currentColor; }
+.pilot-profile:nth-child(2) .pilot-ship { color: #cf8aff; }.pilot-profile:nth-child(3) .pilot-ship { color: #7185a8; }
+.pilot-profile small, .pilot-profile em { display: block; overflow: hidden; color: #647795; font: 800 7px/1.35 ui-monospace, monospace; letter-spacing: .11em; text-overflow: ellipsis; white-space: nowrap; }
+.pilot-profile strong { display: block; overflow: hidden; margin: 2px 0; color: #e9f8ff; font: 800 11px/1.2 ui-monospace, monospace; text-overflow: ellipsis; white-space: nowrap; }
+.pilot-profile .pilot-edit { width: 28px; height: 28px; border-radius: 50%; clip-path: none; color: #b9d8e8; background: rgba(31,58,84,.8); font: 900 13px/28px inherit; letter-spacing: 0; }
+.pilot-editor, .mobile-settings { margin: 18px 0; padding: 14px; border: 1px solid rgba(80,135,195,.25); background: rgba(5,12,28,.62); }
+.pilot-editor h3, .mobile-settings h3 { margin: 0 0 12px; color: var(--cyan); font: 900 11px ui-monospace, monospace; letter-spacing: .16em; }
+.pilot-name-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.options-panel { max-height: 88vh; overflow-y: auto; padding: 4px 10px 18px; }
+.mobile-settings[hidden] { display: none !important; }
+.mobile-options-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0 12px; }
+.mobile-setting-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.mobile-setting-actions button, #mobileFullscreenButton { width: auto; min-width: 190px; padding: 0 12px; font-size: 9px; line-height: 38px; }
+
+/* La capa móvil solo se activa tras detectar tacto o puntero grueso. */
+body:not(.mobile-capable) .mobile-settings, body:not(.mobile-capable) .touch-controls { display: none !important; }
+body.mobile-capable #game { overscroll-behavior: none; }
+body.mobile-capable .touch-controls { --touch-size: 50px; display: none; position: absolute; z-index: 30; inset: 0; padding: 0; pointer-events: none; touch-action: none; user-select: none; -webkit-user-select: none; }
+body.mobile-capable .touch-controls.visible { display: block; }
+body.mobile-capable[data-mobile-buttons="medium"] .touch-controls { --touch-size: 58px; }
+body.mobile-capable[data-mobile-buttons="large"] .touch-controls { --touch-size: 66px; }
+body.mobile-capable .touch-controls button { position: absolute; width: var(--touch-size); height: var(--touch-size); border: 1px solid rgba(151,235,255,.72); border-radius: 50%; clip-path: none; color: #eaffff; background: radial-gradient(circle at 35% 30%, rgba(85,195,220,.72), rgba(10,40,68,.72)); font: 900 calc(var(--touch-size) * .28)/1 ui-monospace, monospace; letter-spacing: 0; opacity: var(--touch-opacity, .45); pointer-events: auto; touch-action: none; box-shadow: 0 0 18px rgba(66,245,233,.2); }
+body.mobile-capable .touch-controls button small { display: block; margin-top: 3px; font-size: 7px; }
+body.mobile-capable .touch-controls button.pressed { opacity: .9; transform: scale(.91); filter: brightness(1.4); }
+body.mobile-capable .touch-pause { position: absolute; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); width: 36px !important; height: 36px !important; font-size: 13px !important; }
+body.mobile-capable .touch-actions { position: static; display: block; }
+body.mobile-capable .touch-fire { right: max(18px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); width: calc(var(--touch-size) * 1.24) !important; height: calc(var(--touch-size) * 1.24) !important; }
+body.mobile-capable .touch-dash { right: calc(max(18px, env(safe-area-inset-right)) + var(--touch-size) * 1.55); bottom: calc(max(20px, env(safe-area-inset-bottom)) + 2px); }
+body.mobile-capable .touch-special { right: calc(max(18px, env(safe-area-inset-right)) + var(--touch-size) * 2.65); bottom: calc(max(18px, env(safe-area-inset-bottom)) + var(--touch-size) * 1.05); }
+body.mobile-capable .touch-ulti { right: calc(max(18px, env(safe-area-inset-right)) + var(--touch-size) * 1.35); bottom: calc(max(18px, env(safe-area-inset-bottom)) + var(--touch-size) * 1.55); border-color: rgba(203,123,255,.7) !important; }
+body.mobile-capable .touch-ulti.ready { opacity: .9; color: #fff; background: radial-gradient(circle, #c359e8, #542c9c); box-shadow: 0 0 24px #d45cff; animation: mobile-ulti-ready 1s ease-in-out infinite alternate; }
+@keyframes mobile-ulti-ready { to { filter: brightness(1.35); } }
+body.mobile-capable .touch-joystick { position: absolute; left: max(18px, env(safe-area-inset-left)); bottom: max(18px, env(safe-area-inset-bottom)); width: calc(var(--touch-size) * 2.05); height: calc(var(--touch-size) * 2.05); border: 1px solid rgba(130,210,240,.35); border-radius: 50%; background: rgba(8,25,48,.24); opacity: var(--touch-opacity, .45); pointer-events: auto; touch-action: none; }
+body.mobile-capable .touch-joystick i { position: absolute; left: 50%; top: 50%; width: calc(var(--touch-size) * .72); height: calc(var(--touch-size) * .72); margin: calc(var(--touch-size) * -.36); border: 1px solid rgba(205,250,255,.75); border-radius: 50%; background: rgba(66,160,190,.7); box-shadow: 0 0 16px rgba(66,245,233,.25); }
+body.mobile-capable[data-mobile-movement="tilt"] .touch-joystick { display: none; }
+
+body.mobile-capable.mobile-landscape .campaign-hud { padding: max(10px, env(safe-area-inset-top)) max(54px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)); }
+body.mobile-capable.mobile-landscape .player-hud { left: max(12px, env(safe-area-inset-left)); bottom: max(12px, env(safe-area-inset-bottom)); transform: scale(.82); transform-origin: bottom left; }
+body.mobile-capable[data-mobile-movement="joystick"].mobile-landscape .player-hud { bottom: calc(max(12px, env(safe-area-inset-bottom)) + var(--touch-size, 50px) * 2.3); }
+body.mobile-capable.mobile-portrait .campaign-hud { padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left)); }
+body.mobile-capable.mobile-portrait .player-hud { left: max(8px, env(safe-area-inset-left)); bottom: calc(max(10px, env(safe-area-inset-bottom)) + var(--touch-size, 50px) * 1.8); transform: scale(.76); transform-origin: bottom left; }
+body.mobile-capable[data-mobile-movement="joystick"].mobile-portrait .player-hud { bottom: calc(max(10px, env(safe-area-inset-bottom)) + var(--touch-size, 50px) * 2.3); }
+body.mobile-capable.mobile-portrait .touch-fire { right: max(12px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom)); }
+body.mobile-capable.mobile-portrait .touch-dash { right: calc(max(12px, env(safe-area-inset-right)) + var(--touch-size) * 1.5); bottom: max(14px, env(safe-area-inset-bottom)); }
+body.mobile-capable.mobile-portrait .touch-special { right: calc(max(12px, env(safe-area-inset-right)) + var(--touch-size) * 2.55); bottom: calc(max(14px, env(safe-area-inset-bottom)) + var(--touch-size) * 1.2); }
+body.mobile-capable.mobile-portrait .touch-ulti { right: calc(max(12px, env(safe-area-inset-right)) + var(--touch-size) * 1.25); bottom: calc(max(14px, env(safe-area-inset-bottom)) + var(--touch-size) * 1.75); }
+body.mobile-capable.mobile-portrait .touch-joystick { bottom: max(14px, env(safe-area-inset-bottom)); }
+body.mobile-capable.mobile-portrait .boss-hud { top: max(94px, 13vh); width: 82vw; }
+
+@media (max-width: 720px) {
+  .pilot-roster { top: 8px; width: calc(100vw - 16px); gap: 4px; }
+  .pilot-profile { grid-template-columns: 22px 1fr 24px; gap: 4px; padding: 5px; }
+  .pilot-profile strong { font-size: 9px; }.pilot-profile em { font-size: 6px; }.pilot-profile .pilot-edit { width: 22px; height: 22px; font-size: 10px; line-height: 22px; }
+  .pilot-name-grid, .mobile-options-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-height: 520px) {
   .controls { display: none !important; }
   .lead { margin: 10px auto; }
