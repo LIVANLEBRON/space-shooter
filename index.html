@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050814">
+  <title>Void Runner — Campaña Cooperativa</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="game" aria-label="Juego de naves Void Runner">
+    <canvas id="canvas" aria-hidden="true"></canvas>
+
+    <header id="hud" class="hud campaign-hud" aria-live="polite">
+      <div class="brand"><span></span> VOID RUNNER</div>
+      <div class="mission-box">
+        <small>NIVEL <b id="levelNumber">—</b></small>
+        <strong id="levelName">EN ESPERA</strong>
+      </div>
+      <div class="score-box"><small>PUNTUACIÓN</small><strong id="score">000000</strong></div>
+    </header>
+
+    <aside id="playerHud" class="player-hud" aria-live="polite">
+      <article id="p1Hud" class="player-card p1-card">
+        <div class="player-title"><b>J1</b><span id="p1State">LISTO</span></div>
+        <label>VIDA <span id="p1HealthValue">100</span></label><div class="meter health-meter"><i id="p1HealthBar"></i></div>
+        <label>ULTI <span id="p1UltiValue">0%</span></label><div class="meter ulti-meter"><i id="p1UltiBar"></i></div>
+        <label>DASH <span id="p1DashValue">LISTO</span></label><div class="meter dash-meter"><i id="p1DashBar"></i></div>
+      </article>
+      <article id="p2Hud" class="player-card p2-card hidden">
+        <div class="player-title"><b>J2</b><span id="p2State">LISTO</span></div>
+        <label>VIDA <span id="p2HealthValue">100</span></label><div class="meter health-meter"><i id="p2HealthBar"></i></div>
+        <label>ULTI <span id="p2UltiValue">0%</span></label><div class="meter ulti-meter"><i id="p2UltiBar"></i></div>
+        <label>DASH <span id="p2DashValue">LISTO</span></label><div class="meter dash-meter"><i id="p2DashBar"></i></div>
+      </article>
+    </aside>
+
+    <div id="bossHud" class="boss-hud" aria-live="polite"><div><small id="bossPhase">FASE 1</small><strong id="bossName">JEFE</strong></div><div class="meter boss-meter"><i id="bossBar"></i></div></div>
+    <div id="objectiveHud" class="objective-hud"><small>OBJETIVO ALIADO</small><div class="meter"><i id="objectiveBar"></i></div></div>
+    <div id="controllerStatus" class="controller-status">⌨ TECLADO · 0 MANDOS</div>
+    <div id="combatToast" class="combat-toast" aria-live="assertive"><strong>PERFECT DASH</strong><small>RECARGA + ULTI</small></div>
+    <div id="comboDisplay" class="combo-display"><small>COMBO</small><strong id="comboValue">×0</strong></div>
+    <div id="synergyDisplay" class="synergy-display">◇ ENLACE COOP ◇</div>
+
+    <div id="levelNotice" class="wave-notice level-notice" aria-live="assertive">
+      <small id="levelSubtitle">PREPÁRATE</small>
+      <strong>NIVEL <b id="levelNoticeNumber">1</b></strong>
+      <p id="levelNoticeName">INTERCEPCIÓN</p>
+    </div>
+
+    <section id="startScreen" class="screen visible">
+      <div class="panel menu-panel">
+        <p class="eyebrow">CAMPAÑA COOPERATIVA — 10 NIVELES</p>
+        <h1>VOID<br><span>RUNNER</span></h1>
+        <p class="lead">La última línea de defensa empieza aquí.</p>
+        <div id="gamepadCount" class="gamepad-count">● 0 MANDOS DETECTADOS</div>
+        <div class="menu-actions">
+          <button id="onePlayerButton" type="button"><span>1 JUGADOR</span><b>▶</b></button>
+          <button id="twoPlayerButton" type="button"><span>2 JUGADORES</span><b>▶▶</b></button>
+          <button id="controlsButton" class="secondary-button" type="button">VER CONTROLES</button>
+          <button id="optionsButton" class="secondary-button" type="button">OPCIONES</button>
+          <button id="rankingButton" class="secondary-button" type="button">RANKING</button>
+        </div>
+        <div class="audio-mixer" aria-label="Mezcla de audio">
+          <label for="musicVolume"><span>MÚSICA</span><input id="musicVolume" type="range" min="0" max="100" value="55"></label>
+          <label for="sfxVolume"><span>EFECTOS</span><input id="sfxVolume" type="range" min="0" max="100" value="72"></label>
+          <button id="muteButton" class="secondary-button audio-mute" type="button" aria-pressed="false">SONIDO: ACTIVO</button>
+        </div>
+        <section class="top-pilots" aria-labelledby="topPilotsTitle"><h2 id="topPilotsTitle">TOP PILOTOS</h2><ol id="topPilotsList"><li class="empty-rank">Ranking no disponible</li></ol></section>
+        <p class="menu-help">STICK / CRUCETA: MOVER · A: CONFIRMAR · B: VOLVER</p>
+      </div>
+    </section>
+
+    <section id="controlsScreen" class="screen" aria-hidden="true">
+      <div class="panel controls-panel">
+        <p class="eyebrow">CONFIGURACIÓN DE VUELO</p><h2>CONTROLES</h2>
+        <div class="control-grid">
+          <article><h3>TECLADO — J1</h3><p><kbd>WASD</kbd> / <kbd>FLECHAS</kbd> Mover</p><p><kbd>ESPACIO</kbd> Disparar</p><p><kbd>SHIFT</kbd> Dash</p><p><kbd>E</kbd> Especial · <kbd>Q</kbd> Ulti</p></article>
+          <article><h3>MANDO — J1</h3><p><kbd>STICK IZQ.</kbd> Mover</p><p><kbd>A</kbd> Disparar</p><p><kbd>B</kbd> Dash · <kbd>X</kbd> Especial</p><p><kbd>Y / RT</kbd> Ulti · <kbd>START</kbd> Pausa</p></article>
+          <article><h3>MANDO — J2</h3><p><kbd>STICK IZQ.</kbd> Mover</p><p><kbd>A</kbd> Disparar</p><p><kbd>LB</kbd> Dash · <kbd>LT</kbd> Especial</p><p><kbd>RB</kbd> Ulti · <kbd>START</kbd> Pausa</p></article>
+        </div>
+        <div class="calibration-box">
+          <p id="p2CalibrationStatus">Si los botones de J2 no coinciden, calibra su mando.</p>
+          <button id="calibrateP2Button" class="secondary-button" type="button">CALIBRAR MANDO J2</button>
+        </div>
+        <p class="hint">Con teclado + mando, el teclado controla J1 y el primer mando controla J2. La calibración se guarda para ese modelo de mando.</p>
+        <p class="menu-help">STICK / CRUCETA: MOVER · A: CONFIRMAR · B: VOLVER</p><button id="closeControlsButton" type="button">VOLVER</button>
+      </div>
+    </section>
+
+    <section id="optionsScreen" class="screen" aria-hidden="true"><div class="panel options-panel"><p class="eyebrow">CONFIGURACIÓN LOCAL</p><h2>OPCIONES</h2><label for="pilotName">NOMBRE DEL PILOTO<input id="pilotName" maxlength="20" autocomplete="off" value="Piloto anónimo"></label><label for="touchMode">CONTROLES TÁCTILES<select id="touchMode"><option value="auto">Automático</option><option value="on">Activados</option><option value="off">Desactivados</option></select></label><p class="hint">El nombre y esta preferencia se guardan solo en este navegador.</p><p class="menu-help">STICK / CRUCETA: MOVER · A: EDITAR / CONFIRMAR · B: VOLVER</p><button id="closeOptionsButton" type="button">GUARDAR Y VOLVER</button></div></section>
+
+    <section id="rankingScreen" class="screen" aria-hidden="true"><div class="panel ranking-panel"><p class="eyebrow">REGISTRO DE CAMPAÑA</p><h2>RANKING</h2><div class="ranking-table"><div class="ranking-head"><span>#</span><span>PILOTO</span><span>NIVEL</span><span>PUNTOS</span><span>MODO</span></div><ol id="rankingList"><li class="empty-rank">Ranking no disponible</li></ol></div><p class="menu-help">STICK / CRUCETA: DESPLAZAR · B: VOLVER</p><button id="closeRankingButton" type="button">VOLVER</button></div></section>
+
+    <section id="pauseScreen" class="screen pause-screen" aria-hidden="true"><div class="panel"><p class="eyebrow">SISTEMA EN ESPERA</p><h2>PAUSA</h2><div class="pause-actions"><button id="continueButton" type="button">CONTINUAR</button><button id="pauseRestartButton" type="button">REINICIAR NIVEL</button><button id="pauseMenuButton" type="button">VOLVER AL MENÚ</button></div><p class="menu-help">STICK / CRUCETA: MOVER · A: CONFIRMAR · B / START: CONTINUAR</p></div></section>
+
+    <section id="confirmScreen" class="screen confirm-screen" aria-hidden="true"><div class="panel"><p class="eyebrow">CONFIRMACIÓN</p><h2 id="confirmTitle">¿ABANDONAR?</h2><p id="confirmText" class="lead"></p><div class="confirm-actions"><button id="confirmYesButton" type="button">SÍ</button><button id="confirmNoButton" type="button">NO</button></div><p class="menu-help">A: CONFIRMAR · B: CANCELAR</p></div></section>
+
+    <section id="upgradeScreen" class="screen" aria-hidden="true">
+      <div class="panel upgrade-panel"><p class="eyebrow">MEJORA DE ESCUADRÓN</p><h2>ELIGE UNA</h2><div id="upgradeChoices" class="upgrade-choices"></div><p class="menu-help">STICK / CRUCETA: ELEGIR · A: CONFIRMAR</p></div>
+    </section>
+
+    <section id="gameOverScreen" class="screen" aria-hidden="true">
+      <div class="panel game-over-panel"><p class="eyebrow danger">MISIÓN FALLIDA</p><h2>GAME <span>OVER</span></h2><p id="gameOverReason" class="lead">El escuadrón fue destruido.</p><div class="final-score"><small>PUNTUACIÓN FINAL</small><strong id="finalScore">000000</strong></div><button id="restartButton" type="button"><span>VOLVER AL MENÚ</span><b>↻</b></button><p class="menu-help">A: CONFIRMAR · B: VOLVER AL MENÚ</p></div>
+    </section>
+
+    <section id="victoryScreen" class="screen victory-screen" aria-hidden="true">
+      <div class="panel victory-panel"><div class="victory-emblem">◇</div><p class="eyebrow">TRANSMISIÓN RESTABLECIDA</p><h2>MISIÓN <span>CUMPLIDA</span></h2><p class="lead">La Nave Madre ha sido destruida. La galaxia vuelve a respirar.</p><div class="final-score"><small>PUNTUACIÓN FINAL</small><strong id="victoryScore">000000</strong></div><div class="credits"><p>VOID RUNNER</p><small>PILOTOS — J1 & J2<br>DISEÑO, CÓDIGO Y ESTRELLAS — TU ESCUADRÓN<br>GRACIAS POR JUGAR</small></div><button id="victoryMenuButton" type="button">VOLVER AL MENÚ</button><p class="menu-help">A: CONFIRMAR · B: VOLVER AL MENÚ</p></div>
+    </section>
+
+    <div id="networkToast" class="network-toast" role="status" aria-live="polite"></div>
+    <div id="touchControls" class="touch-controls" aria-label="Controles táctiles">
+      <div class="touch-dpad"><button data-key="w" aria-label="Arriba">▲</button><button data-key="a" aria-label="Izquierda">◀</button><button data-key="s" aria-label="Abajo">▼</button><button data-key="d" aria-label="Derecha">▶</button></div>
+      <div class="touch-actions"><button id="touchPauseButton">PAUSA</button><button data-key="shift">DASH</button><button data-key="e">ESP.</button><button data-key="q">ULTI</button><button class="touch-fire" data-key=" ">FUEGO</button></div>
+    </div>
+
+    <div class="scanlines" aria-hidden="true"></div>
+  </main>
+  <script src="audio.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="ranking.js"></script>
+  <script src="game.js"></script>
+  <script src="interface.js"></script>
+</body>
+</html>
