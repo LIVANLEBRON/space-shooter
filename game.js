@@ -141,7 +141,7 @@
     state.levelClearPending = false; state.players.forEach((p, index) => { if (!p.active) return; p.dead = false; p.health = Math.max(p.health, p.maxHealth * .65); p.x = innerWidth * (state.playerCount === 2 ? (index ? .58 : .42) : .5); p.y = innerHeight * .82; p.invulnerable = 1300; p.temporaryBoost = level.boost ? 15000 : 0; p.ulti = level.boost ? 100 : p.ulti; if (p.shield < 1 && state.upgrades.includes('shield')) p.shield = 1; });
     ui.level.textContent = number; ui.levelName.textContent = level.name; ui.noticeNumber.textContent = number;
     ui.noticeName.textContent = level.name; ui.noticeSubtitle.textContent = level.subtitle; ui.notice.classList.add('visible');
-    ui.objectiveHud.classList.toggle('visible', Boolean(state.objective)); ui.bossHud.classList.remove('visible'); updateHud();
+    ui.objectiveHud.classList.toggle('visible', Boolean(state.objective)); ui.bossHud.classList.remove('visible'); updateHud(); dispatchEvent(new CustomEvent('void-level-started', { detail: { level: number } }));
   }
 
   function enterLevel() {

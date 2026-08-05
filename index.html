@@ -59,6 +59,7 @@
         <h1>VOID<br><span>RUNNER</span></h1>
         <p class="lead">La última línea de defensa empieza aquí.</p>
         <div id="gamepadCount" class="gamepad-count">● 0 MANDOS DETECTADOS</div>
+        <button id="mobileFullscreenButton" class="secondary-button mobile-menu-only" type="button">ENTRAR EN PANTALLA COMPLETA</button>
         <div class="menu-actions">
           <button id="onePlayerButton" type="button"><span>1 JUGADOR</span><b>▶</b></button>
           <button id="twoPlayerButton" type="button"><span>2 JUGADORES</span><b>▶▶</b></button>
@@ -96,8 +97,8 @@
     <section id="optionsScreen" class="screen" aria-hidden="true"><div class="panel options-panel"><p class="eyebrow">CONFIGURACIÓN LOCAL</p><h2>OPCIONES</h2>
       <section class="pilot-editor"><h3>PILOTOS</h3><div class="pilot-name-grid"><label for="pilotName1">PILOTO 1<input id="pilotName1" maxlength="20" autocomplete="off"></label><label for="pilotName2">PILOTO 2<input id="pilotName2" maxlength="20" autocomplete="off"></label><label for="pilotName3">PILOTO 3<input id="pilotName3" maxlength="20" autocomplete="off"></label></div></section>
       <section id="mobileSettings" class="mobile-settings" aria-labelledby="mobileSettingsTitle"><h3 id="mobileSettingsTitle">CONTROLES MÓVILES</h3>
-        <button id="mobileFullscreenButton" class="secondary-button" type="button">ENTRAR EN PANTALLA COMPLETA</button>
         <div class="mobile-options-grid">
+          <label class="mobile-keep-label" for="mobileKeepMode">MANTENER MODO MÓVIL<input id="mobileKeepMode" type="checkbox"></label>
           <label for="mobileOrientation">ORIENTACIÓN<select id="mobileOrientation"><option value="auto">Automática</option><option value="landscape">Horizontal</option><option value="portrait">Vertical</option></select></label>
           <label for="mobileMovement">MÉTODO DE MOVIMIENTO<select id="mobileMovement"><option value="tilt">Inclinación</option><option value="joystick">Joystick táctil</option></select></label>
           <label for="mobileSensitivity">SENSIBILIDAD<select id="mobileSensitivity"><option value="low">Baja</option><option value="medium">Media</option><option value="high">Alta</option></select></label>
@@ -108,9 +109,9 @@
           <label for="mobileOpacity">OPACIDAD<select id="mobileOpacity"><option value="30">30 %</option><option value="45">45 %</option><option value="60">60 %</option></select></label>
         </div>
         <div class="mobile-setting-actions"><button id="mobileSensorButton" class="secondary-button" type="button">ACTIVAR PERMISO DEL SENSOR</button><button id="mobileCalibrateButton" class="secondary-button" type="button">CALIBRAR INCLINACIÓN</button><button id="mobileResetButton" class="secondary-button" type="button">RESTABLECER CONTROLES MÓVILES</button></div>
-        <p id="mobileSensorStatus" class="hint">Sensor sin activar.</p>
+        <p id="mobileSensorStatus" class="hint">Pulsa activar permiso para comprobar el sensor.</p>
       </section>
-      <p class="hint">Los nombres y preferencias se guardan en este navegador.</p><p class="menu-help">STICK / CRUCETA: MOVER · A: EDITAR / CONFIRMAR · B: VOLVER</p><button id="closeOptionsButton" type="button">GUARDAR Y VOLVER</button></div></section>
+      <p class="hint">Los nombres y preferencias se guardan en este navegador.</p><button id="mobileSaveButton" class="mobile-save-button" type="button">GUARDAR</button><p class="menu-help">STICK / CRUCETA: MOVER · A: EDITAR / CONFIRMAR · B: VOLVER</p><button id="closeOptionsButton" type="button">GUARDAR Y VOLVER</button></div></section>
 
     <section id="rankingScreen" class="screen" aria-hidden="true"><div class="panel ranking-panel"><p class="eyebrow">REGISTRO DE CAMPAÑA</p><h2>RANKING</h2><div class="ranking-table"><div class="ranking-head"><span>#</span><span>PILOTO</span><span>NIVEL</span><span>PUNTOS</span><span>MODO</span></div><ol id="rankingList"><li class="empty-rank">Ranking no disponible</li></ol></div><p class="menu-help">STICK / CRUCETA: DESPLAZAR · B: VOLVER</p><button id="closeRankingButton" type="button">VOLVER</button></div></section>
 
