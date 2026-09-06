@@ -37,3 +37,20 @@ Publica el contenido de `firestore.rules` en **Firestore Database > Rules**. Cad
 5. Recarga el juego: el Top 7 debe conservar el resultado.
 6. Desactiva la red, consigue un resultado mejor y comprueba “Récord guardado localmente”.
 7. Recupera la red y comprueba “Récord sincronizado”.
+
+## Récords de avance (septiembre de 2026)
+
+Se guarda al entrar en cada nivel, cada cinco segundos durante la partida, al salir y al perder o ganar. El mejor intento se ordena por victoria, nivel alcanzado, porcentaje superado del jefe final (sus dos vidas) y puntos. Revivir al jefe equivale al 50%; vencerlo definitivamente, al 100%. Los récords anteriores siguen siendo compatibles; los intentos fallidos antiguos no tienen porcentaje de jefe registrado.
+
+Los envíos pendientes se reintentan al abrir el juego, recuperar conexión y cada 30 segundos. El ranking completo ya no se limita a cuatro jugadores en móvil.
+
+Si Firestore responde `PERMISSION_DENIED`, la cuenta propietaria debe publicar las reglas incluidas:
+
+```sh
+npx firebase-tools login
+npx firebase-tools deploy --only firestore:rules --project com-example-myapplicatio-32160
+```
+
+Actualizar GitHub/Vercel no publica las reglas de Firebase. El guardado local permanece disponible mientras el acceso global esté bloqueado.
+
+Pruebas de persistencia y ordenación: `node --test tests/ranking.test.cjs`.

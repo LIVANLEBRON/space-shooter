@@ -24,9 +24,9 @@
     { name: 'TORMENTA ESPACIAL', subtitle: 'CARGA ELÉCTRICA DETECTADA', queue: { basic: 7, fast: 5, shooter: 3 }, storm: true },
     { name: 'EL DEVORADOR', subtitle: 'FIRMA MASIVA APROXIMÁNDOSE', boss: 'devourer' },
     { name: 'INFILTRACIÓN', subtitle: 'ENTRANDO EN LA FORTALEZA', queue: { basic: 5, fast: 4, shooter: 5, tank: 2 }, corridor: true },
-    { name: 'DEFENSA DEL NÚCLEO', subtitle: 'PROTEGE LA NAVE ALIADA', queue: { basic: 10, fast: 7, shooter: 5, tank: 2 }, defense: true },
-    { name: 'FLOTA ENEMIGA', subtitle: 'FORMACIÓN HOSTIL COMPLETA', queue: { basic: 14, fast: 10, shooter: 7, tank: 5, miniboss: 2 } },
-    { name: 'ASALTO FINAL', subtitle: 'SOBRECARGA DE ARMAMENTO', queue: { basic: 14, fast: 12, shooter: 10, tank: 6, miniboss: 2 }, boost: true, storm: true },
+    { name: 'DEFENSA DEL NÚCLEO', subtitle: 'PROTEGE LA NAVE ALIADA', queue: { basic: 11, fast: 8, shooter: 6, tank: 3 }, defense: true },
+    { name: 'FLOTA ENEMIGA', subtitle: 'FORMACIÓN HOSTIL COMPLETA', queue: { basic: 15, fast: 12, shooter: 8, tank: 6, miniboss: 2 } },
+    { name: 'ASALTO FINAL', subtitle: 'SOBRECARGA DE ARMAMENTO', queue: { basic: 16, fast: 14, shooter: 11, tank: 7, miniboss: 2 }, boost: true, storm: true },
     { name: 'NAVE MADRE', subtitle: 'DESTRUYE ARMAS, MOTORES Y NÚCLEO', boss: 'mothership' }
   ];
 
@@ -123,7 +123,7 @@
   }
 
   function showScreen(screen) { [ui.start, ui.controls, ui.options, ui.ranking, ui.pause, ui.confirm, ui.upgrades, ui.gameOver, ui.victory].forEach(s => { const on = s === screen; s.classList.toggle('visible', on); s.setAttribute('aria-hidden', String(!on)); }); dispatchEvent(new CustomEvent('void-screen-change', { detail: { id: screen?.id || null } })); }
-  function returnToMenu() { state.mode = 'menu'; state.boss = null; setMusic('menu'); sfx('ui_cancel'); showScreen(ui.start); updatePadDisplay(); }
+  function returnToMenu() { if (state.level > 0) submitRecord(state.finalBossDefeated); state.mode = 'menu'; state.boss = null; setMusic('menu'); sfx('ui_cancel'); showScreen(ui.start); updatePadDisplay(); }
 
   function startCampaign(count) {
     sfx('ui_start');
@@ -135,7 +135,7 @@
   function buildQueue(config) { const queue = []; Object.entries(config || {}).forEach(([type, count]) => { for (let i = 0; i < count; i++) queue.push(type); }); return shuffle(queue); }
   function startLevel(number) {
     const level = LEVELS[number - 1]; state.level = number; state.mode = 'intro'; state.levelTimer = 2100;
-    state.time = 0; state.spawnTimer = 250; state.environmentTimer = 900; state.queue = buildQueue(level.queue);
+    state.recordTimer = 0; state.time = 0; state.spawnTimer = 250; state.environmentTimer = 900; state.queue = buildQueue(level.queue);
     state.enemies = []; state.bullets = []; state.enemyBullets = []; state.obstacles = []; state.hazards = [];
     state.pickups = []; state.hitFlashes = []; state.boss = null; state.phaseFlash = 0; state.objective = level.defense ? { x: innerWidth / 2, y: innerHeight * .56, w: 90, h: 72, health: 180 * (state.playerCount === 2 ? 1.35 : 1), maxHealth: 180 * (state.playerCount === 2 ? 1.35 : 1) } : null;
     state.levelClearPending = false; state.players.forEach((p, index) => { if (!p.active) return; p.dead = false; p.health = Math.max(p.health, p.maxHealth * .65); p.x = innerWidth * (state.playerCount === 2 ? (index ? .58 : .42) : .5); p.y = innerHeight * .82; p.invulnerable = 1300; p.temporaryBoost = level.boost ? 15000 : 0; p.ulti = level.boost ? 100 : p.ulti; if (p.shield < 1 && state.upgrades.includes('shield')) p.shield = 1; });
@@ -147,6 +147,7 @@
   function enterLevel() {
     state.mode = 'playing'; ui.notice.classList.remove('visible'); setMusic(LEVELS[state.level - 1].boss || 'flight');
     if (LEVELS[state.level - 1].boss) spawnBoss(LEVELS[state.level - 1].boss);
+    submitRecord(false);
     if (state.level === 3) for (let i = 0; i < 4; i++) spawnAsteroid(i * innerHeight / 4);
     if (state.level === 6) spawnInfiltration();
   }
@@ -184,7 +185,14 @@
     }); if (key === 'shield') state.players.filter(p => p.active).forEach(p => sfx('player_shield', { player: p.id })); if (key === 'health') state.players.filter(p => p.active).forEach(p => sfx('player_heal', { player: p.id })); showScreen(null); startLevel(state.level + 1);
   }
 
-  function submitRecord(completed = false) { if (!window.VoidRanking) return; window.VoidRanking.submit({ name: localStorage.getItem('spaceShooter.player1Name') || localStorage.getItem('void-runner-pilot-name') || 'Piloto 1', highestLevel: state.level, maxScore: Math.floor(state.score), boss5Defeated: state.boss5Defeated, finalBossDefeated: state.finalBossDefeated, campaignCompleted: completed, playerCount: state.playerCount }).then(() => dispatchEvent(new Event('void-ranking-updated'))).catch(() => {}); }
+  function finalBossProgress() {
+    if (state.finalBossDefeated) return 100;
+    const b = state.boss;
+    if (b?.type !== 'mothership') return 0;
+    const remaining = b.parts.reduce((sum, p) => sum + Math.max(0, p.hp), 0);
+    return Math.min(99, Math.floor(((b.reborn ? 1 : 0) + 1 - remaining / b.maxHealth) * 50));
+  }
+  function submitRecord(completed = false) { if (!window.VoidRanking) return; window.VoidRanking.submit({ name: localStorage.getItem('spaceShooter.player1Name') || localStorage.getItem('void-runner-pilot-name') || 'Piloto 1', highestLevel: state.level, finalBossProgress: finalBossProgress(), maxScore: Math.floor(state.score), boss5Defeated: state.boss5Defeated, finalBossDefeated: state.finalBossDefeated, campaignCompleted: completed, playerCount: state.playerCount }).then(() => dispatchEvent(new Event('void-ranking-updated'))).catch(() => {}); }
   function gameOver(reason = 'El escuadrón fue destruido.') { state.mode = 'gameover'; submitRecord(false); setMusic('gameover'); sfx('ui_gameover'); ui.reason.textContent = reason; ui.finalScore.textContent = String(state.score).padStart(6, '0'); showScreen(ui.gameOver); }
   function victory() { state.mode = 'victory'; state.finalBossDefeated = true; submitRecord(true); state.flash = 1000; setMusic('victory'); sfx('ui_victory'); ui.victoryScore.textContent = String(state.score).padStart(6, '0'); showScreen(ui.victory); }
   function togglePause() { if (!['playing', 'intro', 'paused'].includes(state.mode)) return; if (state.mode === 'paused') { state.mode = state.pausedFrom; audio.resumeMusic(); sfx('ui_resume'); showScreen(null); } else { state.pausedFrom = state.mode; state.mode = 'paused'; state.keys.clear(); audio.pauseMusic(); sfx('ui_pause'); showScreen(ui.pause); } }
@@ -231,10 +239,26 @@
 
   function spawnBoss(type) {
     if (type === 'devourer') state.boss = { type, name: 'EL DEVORADOR', x: innerWidth / 2, y: 165, w: Math.min(390, innerWidth * .48), h: 190, health: 430 * (state.playerCount === 2 ? 1.6 : 1), maxHealth: 430 * (state.playerCount === 2 ? 1.6 : 1), phase: 1, lastPhase: 1, timer: 1100, summonTimer: 5000, splitTimer: 0, copies: [] };
-    else { const coopScale = state.playerCount === 2 ? 1.65 : 1; state.boss = { type, name: 'NAVE MADRE OMEGA', x: innerWidth / 2, y: 170, w: Math.min(620, innerWidth * .72), h: 235, health: 900 * coopScale, maxHealth: 900 * coopScale, phase: 1, lastPhase: 1, timer: 1000, summonTimer: 4500, parts: [
+    else { const coopScale = state.playerCount === 2 ? 1.65 : 1; state.boss = { type, name: 'NAVE MADRE OMEGA', reborn: false, barrageTimer: 3200, x: innerWidth / 2, y: 170, w: Math.min(620, innerWidth * .72), h: 235, health: 900 * coopScale, maxHealth: 900 * coopScale, phase: 1, lastPhase: 1, timer: 1000, summonTimer: 4500, parts: [
       { id: 'arma-i', x: -.32, y: .05, hp: 120, maxHp: 120, color: '#ff426f' }, { id: 'arma-d', x: .32, y: .05, hp: 120, maxHp: 120, color: '#ff426f' }, { id: 'motor', x: 0, y: -.28, hp: 160, maxHp: 160, color: '#ff9d42' }, { id: 'núcleo', x: 0, y: .16, hp: 500, maxHp: 500, color: '#42f5e9', locked: true }
     ].map(part => ({ ...part, hp: part.hp * coopScale, maxHp: part.maxHp * coopScale })) }; }
     ui.bossName.textContent = state.boss.name; ui.bossHud.classList.add('visible'); sfx('boss_enter'); sfx('boss_fight'); updateHud();
+  }
+
+  // One reconstruction per encounter; victory and rewards require the second defeat.
+  function reviveMothership(b) {
+    b.reborn = true; b.name = 'OMEGA RENACIDA';
+    b.parts.forEach(part => { part.hp = part.maxHp; part.locked = part.id === 'núcleo'; });
+    b.health = b.maxHealth; b.phase = 1; b.lastPhase = 1;
+    b.timer = 1800; b.summonTimer = 1800; b.barrageTimer = 3200;
+    state.enemyBullets = []; state.hazards = []; state.bullets = [];
+    state.phaseFlash = 1100; state.shake = 20;
+    burst(b.x, b.y, 100, '#ff426f', 440, true); sfx('boss_phase'); setMusic(b.type, 3);
+    ui.bossName.textContent = b.name;
+    ui.toast.querySelector('strong').textContent = 'OMEGA HA REVIVIDO';
+    ui.toast.querySelector('small').textContent = 'VIDA RESTAURADA · REFUERZOS EN CAMINO';
+    ui.toast.classList.add('visible'); state.toastTimer = 2600;
+    updateHud();
   }
 
   function bossShot(angle, speed = 245, x = state.boss.x, y = state.boss.y) { state.enemyBullets.push({ x, y, w: 11, h: 11, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage: 13, color: '#ff7b54' }); }
@@ -242,7 +266,7 @@
   function aimedBossShot(count = 3) { const target = targetPlayer(state.boss); if (!target) return; const angle = Math.atan2(target.y - state.boss.y, target.x - state.boss.x); for (let i = 0; i < count; i++) bossShot(angle + (i - (count - 1) / 2) * .18, 270); }
   function bossPhaseTransition(b) {
     if (b.phase === b.lastPhase) return; b.lastPhase = b.phase; b.timer = 900; state.phaseFlash = 700; state.shake = 16; state.enemyBullets = state.enemyBullets.filter((_, i) => i % 3 === 0);
-    burst(b.x, b.y, b.type === 'mothership' ? 85 : 60, b.phase === 3 ? '#42f5e9' : '#ff426f', 420, true); sfx('boss_phase'); setMusic(b.type, b.phase);
+    burst(b.x, b.y, b.type === 'mothership' ? 85 : 60, b.phase === 3 ? '#42f5e9' : '#ff426f', 420, true); sfx('boss_phase'); setMusic(b.type, b.reborn ? 3 : b.phase);
     ui.toast.querySelector('strong').textContent = `FASE ${b.phase}`; ui.toast.querySelector('small').textContent = b.type === 'mothership' ? 'NÚCLEO DE LA NAVE MADRE' : 'EL DEVORADOR EVOLUCIONA'; ui.toast.classList.add('visible'); state.toastTimer = 1200;
   }
   function bossCrossAttack() {
@@ -263,8 +287,25 @@
       core.locked = externals.length > 0; b.phase = externals.length >= 2 ? 1 : externals.length ? 2 : 3; bossPhaseTransition(b);
       b.health = b.parts.reduce((sum, part) => sum + Math.max(0, part.hp), 0); b.maxHealth = b.parts.reduce((sum, part) => sum + part.maxHp, 0);
       b.parts.filter(part => part.hp <= 0).forEach(part => { if (Math.random() < dt * 4) burst(b.x + part.x * b.w, b.y + part.y * b.h, 2, '#ff7b54', 90); });
-      if (b.timer <= 0) { sfx('boss_attack'); if (b.phase === 1) { aimedBossShot(5); bossShot(Math.PI * .75, 280, b.x - b.w * .3, b.y); bossShot(Math.PI * .25, 280, b.x + b.w * .3, b.y); } else if (b.phase === 2) { radialBossShot(16, 255); if (Math.random() < .5) bossCrossAttack(); } else { radialBossShot(22, 280); aimedBossShot(7); telegraphArea(targetPlayer(b)); bossCrossAttack(); } b.timer = b.phase === 3 ? 680 : 980; }
-      if (b.summonTimer <= 0 && alive.length) { sfx('boss_summon'); spawnEnemy(b.phase === 1 ? 'fast' : 'shooter'); spawnEnemy('basic'); b.summonTimer = 4300; }
+      if (b.timer <= 0) { sfx('boss_attack'); if (b.phase === 1) { aimedBossShot(5); bossShot(Math.PI * .75, 280, b.x - b.w * .3, b.y); bossShot(Math.PI * .25, 280, b.x + b.w * .3, b.y); } else if (b.phase === 2) { radialBossShot(16, 255); if (Math.random() < .5) bossCrossAttack(); } else { radialBossShot(22, 280); aimedBossShot(7); telegraphArea(targetPlayer(b)); bossCrossAttack(); } b.timer = b.reborn ? (b.phase === 3 ? 500 : 720) : (b.phase === 3 ? 620 : 900); }
+      if (b.summonTimer <= 0 && alive.length) {
+        const cap = state.playerCount === 2 ? 12 : 9;
+        const reinforcements = b.reborn ? ['fast', 'shooter', 'tank', b.phase === 3 ? 'miniboss' : 'shooter'] : ['fast', 'shooter'];
+        if (state.enemies.length < cap) sfx('boss_summon');
+        reinforcements.forEach(type => { if (state.enemies.length < cap) spawnEnemy(type); });
+        b.summonTimer = b.reborn ? 2800 : 3900;
+      }
+      if (b.reborn) {
+        b.barrageTimer -= dt * 1000;
+        if (b.barrageTimer <= 0) {
+          // Telegraph the target before the blast; leave space to dodge the side volleys.
+          telegraphArea(targetPlayer(b));
+          for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {
+            bossShot(Math.PI / 2 + side * (.25 + i * .2), 300, b.x + side * b.w * .32, b.y + 30);
+          }
+          b.barrageTimer = b.phase === 3 ? 1900 : 2600;
+        }
+      }
     }
     updateHud();
   }
@@ -426,7 +467,7 @@
   function updateEnvironment(dt) {
     const level = LEVELS[state.level - 1]; state.environmentTimer -= dt * 1000;
     if (level.asteroids && state.environmentTimer <= 0) { spawnAsteroid(); state.environmentTimer = random(1000, 1800); }
-    if (level.storm && state.environmentTimer <= 0) { spawnStormHazard(); state.environmentTimer = state.level === 9 ? 1900 : 2900; }
+    if (level.storm && state.environmentTimer <= 0) { spawnStormHazard(); state.environmentTimer = state.level === 9 ? 1700 : 2900; }
     state.obstacles.forEach(o => { o.y += o.speed * dt; o.angle += o.spin * dt; }); state.obstacles = state.obstacles.filter(o => o.y < innerHeight + o.h);
     state.hazards.forEach(h => { h.timer -= dt * 1000; if (!h.active && h.timer <= 0) { h.active = true; h.timer = h.duration; } else if (h.active && h.timer <= 0) { h.active = false; h.done = !h.permanent; h.timer = h.permanent ? 1800 : 0; } }); state.hazards = state.hazards.filter(h => !h.done);
   }
@@ -440,16 +481,19 @@
     if (state.mode !== 'playing') return; updateInputs(); state.time += dt * 1000; state.players.forEach(p => updatePlayer(p, dt)); separatePlayers(); updateCoop(dt);
     if (state.keys.has(' ')) playerShoot(state.players[0]);
     state.spawnTimer -= dt * 1000; const cap = (5 + Math.floor(state.level / 2)) * (state.playerCount === 2 ? 1.35 : 1);
-    if (state.queue.length && state.spawnTimer <= 0 && state.enemies.length < cap) { spawnEnemy(); state.spawnTimer = Math.max(260, 760 - state.level * 35); }
+    if (state.queue.length && state.spawnTimer <= 0 && state.enemies.length < cap) { spawnEnemy(); state.spawnTimer = Math.max(260, 760 - state.level * 35) * (state.level >= 7 && state.level <= 9 ? .9 : 1); }
     state.enemies.forEach(e => updateEnemy(e, dt)); updateProjectiles(dt); updateEnvironment(dt); updateBoss(dt); resolveCollisions();
-    if (state.boss) { const dead = state.boss.type === 'devourer' ? state.boss.health <= 0 : state.boss.parts.every(p => p.hp <= 0); if (dead) { const b = state.boss, finale = state.level === 10, explosions = finale ? 28 : 17; if (state.level === 5) state.boss5Defeated = true; if (finale) state.finalBossDefeated = true; submitRecord(false); state.phaseFlash = finale ? 1400 : 800; state.shake = finale ? 24 : 15; sfx('boss_defeat'); for (let i = 0; i < explosions; i++) setTimeout(() => { burst(b.x + random(-b.w / 2, b.w / 2), b.y + random(-b.h / 2, b.h / 2), finale ? 34 : 26, i % 3 ? '#ff426f' : '#42f5e9', finale ? 440 : 350, true); sfx('enemy_destroy', { x: b.x }); }, i * (finale ? 75 : 68)); state.score += finale ? 12000 : 5000; state.players.forEach(p => { gainUlti(p, 100); p.health = Math.min(p.maxHealth, p.health + 35); sfx('player_heal', { player: p.id }); }); state.boss = null; ui.bossHud.classList.remove('visible'); completeLevel(); } }
+    if (state.mode !== 'playing') return;
+    state.recordTimer += dt * 1000;
+    if (state.recordTimer >= 5000) { state.recordTimer = 0; submitRecord(false); }
+    if (state.boss) { const dead = state.boss.type === 'devourer' ? state.boss.health <= 0 : state.boss.parts.every(p => p.hp <= 0); if (dead && state.boss.type === 'mothership' && !state.boss.reborn) { reviveMothership(state.boss); } else if (dead) { const b = state.boss, finale = state.level === 10, explosions = finale ? 28 : 17; if (state.level === 5) state.boss5Defeated = true; if (finale) state.finalBossDefeated = true; submitRecord(false); state.phaseFlash = finale ? 1400 : 800; state.shake = finale ? 24 : 15; sfx('boss_defeat'); for (let i = 0; i < explosions; i++) setTimeout(() => { burst(b.x + random(-b.w / 2, b.w / 2), b.y + random(-b.h / 2, b.h / 2), finale ? 34 : 26, i % 3 ? '#ff426f' : '#42f5e9', finale ? 440 : 350, true); sfx('enemy_destroy', { x: b.x }); }, i * (finale ? 75 : 68)); state.score += finale ? 12000 : 5000; state.players.forEach(p => { gainUlti(p, 100); p.health = Math.min(p.maxHealth, p.health + 35); sfx('player_heal', { player: p.id }); }); state.boss = null; ui.bossHud.classList.remove('visible'); completeLevel(); } }
     else if (!state.queue.length && !state.enemies.length && (!LEVELS[state.level - 1].asteroids || state.time > 12000)) completeLevel(); updateHud();
   }
 
   function updateHud() {
     ui.score.textContent = String(Math.floor(state.score)).padStart(6, '0'); ui.level.textContent = state.level || '—'; ui.levelName.textContent = state.level ? LEVELS[state.level - 1].name : 'EN ESPERA';
     state.players.forEach((p, i) => { const n = i + 1; $(`#p${n}HealthBar`).style.width = `${clamp(p.health / p.maxHealth, 0, 1) * 100}%`; $(`#p${n}HealthValue`).textContent = Math.ceil(p.health); $(`#p${n}UltiBar`).style.width = `${p.ulti}%`; $(`#p${n}UltiValue`).textContent = p.ulti >= 100 ? 'LISTA' : `${Math.floor(p.ulti)}%`; const dash = 1 - clamp(p.dashCooldown / p.dashBase, 0, 1); $(`#p${n}DashBar`).style.width = `${dash * 100}%`; $(`#p${n}DashValue`).textContent = dash >= 1 ? 'LISTO' : `${(p.dashCooldown / 1000).toFixed(1)}s`; $(`#p${n}State`).textContent = p.dead ? (p.reviveProgress > 0 ? `REVIVIENDO ${Math.floor(p.reviveProgress / 18)}%` : 'CAÍDO') : state.synergy ? 'ENLAZADO' : p.shield ? `ESCUDO ${p.shield}` : 'ACTIVO'; });
-    if (state.boss) { ui.bossPhase.textContent = `FASE ${state.boss.phase}`; const ratio = state.boss.type === 'devourer' ? state.boss.health / state.boss.maxHealth : state.boss.health / state.boss.maxHealth; ui.bossBar.style.width = `${clamp(ratio, 0, 1) * 100}%`; }
+    if (state.boss) { ui.bossPhase.textContent = `${state.boss.reborn ? 'RENACIDA · ' : ''}FASE ${state.boss.phase}`; const ratio = state.boss.type === 'devourer' ? state.boss.health / state.boss.maxHealth : state.boss.health / state.boss.maxHealth; ui.bossBar.style.width = `${clamp(ratio, 0, 1) * 100}%`; }
     if (state.objective) ui.objectiveBar.style.width = `${state.objective.health / state.objective.maxHealth * 100}%`; document.querySelector('.touch-ulti')?.classList.toggle('ready', state.players[0].ulti >= 100);
   }
 
@@ -517,6 +561,7 @@
   ui.muteButton.addEventListener('click', () => { initAudio(); audio.toggleMute(); syncAudioControls(); sfx('ui_confirm'); });
   addEventListener('void-toggle-pause', togglePause);
   addEventListener('void-restart-level', () => { if (state.mode !== 'paused') return; audio.resumeMusic(); showScreen(null); startLevel(state.level); });
+  addEventListener('pagehide', () => { if (state.level > 0) submitRecord(state.finalBossDefeated); });
   addEventListener('void-return-menu', returnToMenu);
   addEventListener('void-show-game-screen', event => { const screen = ui[event.detail]; if (screen) showScreen(screen); });
 
@@ -531,7 +576,7 @@
     destroyPart(id) { const part = state.boss?.parts?.find(p => p.id === id); if (part) part.hp = 0; },
     killBoss() { if (!state.boss) return; if (state.boss.type === 'devourer') state.boss.health = 0; else state.boss.parts.forEach(p => p.hp = 0); },
     choose: chooseUpgrade, pads: updatePadDisplay, audio: () => audio.debug(), audioEvent: (name, options) => { initAudio(); return sfx(name, options); }, music: (theme, section = 1) => { initAudio(); return setMusic(theme, section); }, gameOver, victory, mode: () => state.mode,
-    snapshot: () => ({ mode: state.mode, level: state.level, clock: Math.round(state.time), gamepads: state.gamepads.length, synergy: state.synergy, toast: ui.toast.classList.contains('visible'), particles: state.particles.length, players: state.players.filter(p => p.active).map(p => ({ id: p.id, dead: p.dead, health: p.health, ulti: p.ulti, dash: Math.max(0, p.dashCooldown), x: Math.round(p.x), y: Math.round(p.y), boost: Math.max(0, p.temporaryBoost), revive: p.reviveProgress })), queue: state.queue.length, queueTypes: [...new Set(state.queue)], enemies: state.enemies.map(e => ({ type: e.type, behavior: e.behavior, guarded: e.guarded > 0 })), bullets: state.bullets.length, bulletOwners: [...new Set(state.bullets.map(b => b.owner))], enemyBullets: state.enemyBullets.length, hazards: state.hazards.map(h => ({ type: h.type, active: h.active })), obstacles: state.obstacles.length, boss: state.boss ? { type: state.boss.type, phase: state.boss.phase, health: state.boss.health, copies: state.boss.copies?.length || 0, parts: state.boss.parts?.map(p => ({ id: p.id, hp: p.hp, locked: p.locked })) } : null, objective: state.objective?.health || null })
+    snapshot: () => ({ mode: state.mode, level: state.level, clock: Math.round(state.time), gamepads: state.gamepads.length, synergy: state.synergy, toast: ui.toast.classList.contains('visible'), particles: state.particles.length, players: state.players.filter(p => p.active).map(p => ({ id: p.id, dead: p.dead, health: p.health, ulti: p.ulti, dash: Math.max(0, p.dashCooldown), x: Math.round(p.x), y: Math.round(p.y), boost: Math.max(0, p.temporaryBoost), revive: p.reviveProgress })), queue: state.queue.length, queueTypes: [...new Set(state.queue)], enemies: state.enemies.map(e => ({ type: e.type, behavior: e.behavior, guarded: e.guarded > 0 })), bullets: state.bullets.length, bulletOwners: [...new Set(state.bullets.map(b => b.owner))], enemyBullets: state.enemyBullets.length, hazards: state.hazards.map(h => ({ type: h.type, active: h.active })), obstacles: state.obstacles.length, boss: state.boss ? { type: state.boss.type, reborn: Boolean(state.boss.reborn), phase: state.boss.phase, health: state.boss.health, copies: state.boss.copies?.length || 0, parts: state.boss.parts?.map(p => ({ id: p.id, hp: p.hp, locked: p.locked })) } : null, objective: state.objective?.health || null })
   };
 
   syncAudioControls(); resize(); updatePadDisplay(); updateHud(); requestAnimationFrame(loop);

@@ -344,8 +344,7 @@ button.gamepad-focus, input.gamepad-focus, select.gamepad-focus { outline: 3px s
 /* En móvil el ranking conserva una sola columna compacta y únicamente TOP 4. */
 body.mobile-capable .top-pilots { display: block !important; width: min(360px, 88vw); margin-top: 10px; padding: 8px 12px; }
 body.mobile-capable .top-pilots li { grid-template-columns: 22px minmax(90px, 1fr) 52px 70px; padding: 4px 0; }
-body.mobile-capable .top-pilots li:nth-child(n+5),
-body.mobile-capable .ranking-table li:nth-child(n+5) { display: none !important; }
+body.mobile-capable .top-pilots li:nth-child(n+5) { display: none !important; }
 body.mobile-capable .ranking-panel { width: min(420px, 94vw); }
 body.mobile-capable .ranking-head,
 body.mobile-capable .ranking-table li { grid-template-columns: 30px minmax(100px, 1fr) 48px 78px; }
@@ -396,3 +395,6 @@ body.mobile-capable .ranking-table li { grid-template-columns: 30px minmax(100px
   .victory-panel .final-score { margin-bottom: 10px; }
   .victory-panel .credits { margin: 8px auto 12px; line-height: 1.55; }
 }
+
+/* Keep final-boss progress readable in both ranking layouts. */
+.top-pilots li span:nth-child(3), .ranking-table li span:nth-child(3) { font-size: 9px; overflow-wrap: anywhere; }

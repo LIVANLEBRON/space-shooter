@@ -1,0 +1,9 @@
+.git
+.env*
+work/
+tests/
+*-debug.log
+prueba-*.png
+FIREBASE_SETUP.md
+firebase.json
+firestore.rules
