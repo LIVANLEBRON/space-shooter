@@ -14,8 +14,10 @@ service cloud.firestore {
         && request.resource.data.maxScore is int
         && request.resource.data.maxScore >= 0
         && request.resource.data.playerCount in [1, 2]
-        && request.resource.data.mode in ['individual', 'cooperativo'];
+        && request.resource.data.mode in ['individual', 'cooperativo']
+        && (!('finalBossProgress' in request.resource.data) || (request.resource.data.finalBossProgress is int && request.resource.data.finalBossProgress >= 0 && request.resource.data.finalBossProgress <= 100));
       allow delete: if false;
     }
   }
 }
+
