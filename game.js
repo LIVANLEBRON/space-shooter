@@ -239,7 +239,7 @@
 
   function spawnBoss(type) {
     if (type === 'devourer') state.boss = { type, name: 'EL DEVORADOR', x: innerWidth / 2, y: 165, w: Math.min(390, innerWidth * .48), h: 190, health: 430 * (state.playerCount === 2 ? 1.6 : 1), maxHealth: 430 * (state.playerCount === 2 ? 1.6 : 1), phase: 1, lastPhase: 1, timer: 1100, summonTimer: 5000, splitTimer: 0, copies: [] };
-    else { const coopScale = state.playerCount === 2 ? 1.65 : 1; state.boss = { type, name: 'NAVE MADRE OMEGA', reborn: false, barrageTimer: 3200, x: innerWidth / 2, y: 170, w: Math.min(620, innerWidth * .72), h: 235, health: 900 * coopScale, maxHealth: 900 * coopScale, phase: 1, lastPhase: 1, timer: 1000, summonTimer: 4500, parts: [
+    else { const coopScale = 1.6 * (state.playerCount === 2 ? 1.65 : 1); state.boss = { type, name: 'NAVE MADRE OMEGA', reborn: false, barrageTimer: 3200, x: innerWidth / 2, y: 170, w: Math.min(620, innerWidth * .72), h: 235, health: 900 * coopScale, maxHealth: 900 * coopScale, phase: 1, lastPhase: 1, timer: 1000, summonTimer: 4500, parts: [
       { id: 'arma-i', x: -.32, y: .05, hp: 120, maxHp: 120, color: '#ff426f' }, { id: 'arma-d', x: .32, y: .05, hp: 120, maxHp: 120, color: '#ff426f' }, { id: 'motor', x: 0, y: -.28, hp: 160, maxHp: 160, color: '#ff9d42' }, { id: 'núcleo', x: 0, y: .16, hp: 500, maxHp: 500, color: '#42f5e9', locked: true }
     ].map(part => ({ ...part, hp: part.hp * coopScale, maxHp: part.maxHp * coopScale })) }; }
     ui.bossName.textContent = state.boss.name; ui.bossHud.classList.add('visible'); sfx('boss_enter'); sfx('boss_fight'); updateHud();
@@ -255,7 +255,7 @@
     state.phaseFlash = 1100; state.shake = 20;
     burst(b.x, b.y, 100, '#ff426f', 440, true); sfx('boss_phase'); setMusic(b.type, 3);
     ui.bossName.textContent = b.name;
-    ui.toast.querySelector('strong').textContent = 'OMEGA HA REVIVIDO';
+    ui.toast.querySelector('strong').textContent = 'FASE 4 · OMEGA HA REVIVIDO';
     ui.toast.querySelector('small').textContent = 'VIDA RESTAURADA · REFUERZOS EN CAMINO';
     ui.toast.classList.add('visible'); state.toastTimer = 2600;
     updateHud();
@@ -267,7 +267,7 @@
   function bossPhaseTransition(b) {
     if (b.phase === b.lastPhase) return; b.lastPhase = b.phase; b.timer = 900; state.phaseFlash = 700; state.shake = 16; state.enemyBullets = state.enemyBullets.filter((_, i) => i % 3 === 0);
     burst(b.x, b.y, b.type === 'mothership' ? 85 : 60, b.phase === 3 ? '#42f5e9' : '#ff426f', 420, true); sfx('boss_phase'); setMusic(b.type, b.reborn ? 3 : b.phase);
-    ui.toast.querySelector('strong').textContent = `FASE ${b.phase}`; ui.toast.querySelector('small').textContent = b.type === 'mothership' ? 'NÚCLEO DE LA NAVE MADRE' : 'EL DEVORADOR EVOLUCIONA'; ui.toast.classList.add('visible'); state.toastTimer = 1200;
+    ui.toast.querySelector('strong').textContent = b.reborn ? `FASE 4 · ETAPA ${b.phase}/3` : `FASE ${b.phase}`; ui.toast.querySelector('small').textContent = b.type === 'mothership' ? 'NÚCLEO DE LA NAVE MADRE' : 'EL DEVORADOR EVOLUCIONA'; ui.toast.classList.add('visible'); state.toastTimer = 1200;
   }
   function bossCrossAttack() {
     state.hazards.push({ type: 'laser', x: innerWidth / 2, y: innerHeight * .62, w: innerWidth, h: 24, timer: 720, active: false, duration: 520, permanent: false }, { type: 'laser', x: innerWidth / 2, y: innerHeight * .58, w: 24, h: innerHeight, timer: 720, active: false, duration: 520, permanent: false });
@@ -275,6 +275,14 @@
 
   function updateBoss(dt) {
     const b = state.boss; if (!b) return; b.timer -= dt * 1000; b.summonTimer -= dt * 1000; b.x = innerWidth / 2 + Math.sin(state.time / 1300) * innerWidth * .13;
+    if (b.reborn) {
+      // Sweep across the arena and dive vertically, keeping every part on screen.
+      const horizontalRange = Math.max(0, (innerWidth - b.w) / 2 - 12);
+      b.x = innerWidth / 2 + Math.sin(state.time / 650) * horizontalRange;
+      const top = b.h / 2 + 12;
+      const bottom = Math.max(top, Math.min(innerHeight * .42, innerHeight - b.h / 2 - 40));
+      b.y = top + (Math.sin(state.time / 950) + 1) / 2 * (bottom - top);
+    }
     if (b.type === 'devourer') {
       const ratio = b.health / b.maxHealth; b.phase = ratio > .66 ? 1 : ratio > .32 ? 2 : 3; bossPhaseTransition(b);
       if (b.timer <= 0) { sfx('boss_attack'); if (b.phase === 1) { aimedBossShot(3); bossShot(Math.PI * .68, 230); bossShot(Math.PI * .32, 230); } else if (b.phase === 2) radialBossShot(12, 245); else { radialBossShot(18, 265); aimedBossShot(5); if (Math.random() < .45) bossCrossAttack(); } b.timer = b.phase === 3 ? 780 : 1180; }
@@ -287,23 +295,36 @@
       core.locked = externals.length > 0; b.phase = externals.length >= 2 ? 1 : externals.length ? 2 : 3; bossPhaseTransition(b);
       b.health = b.parts.reduce((sum, part) => sum + Math.max(0, part.hp), 0); b.maxHealth = b.parts.reduce((sum, part) => sum + part.maxHp, 0);
       b.parts.filter(part => part.hp <= 0).forEach(part => { if (Math.random() < dt * 4) burst(b.x + part.x * b.w, b.y + part.y * b.h, 2, '#ff7b54', 90); });
-      if (b.timer <= 0) { sfx('boss_attack'); if (b.phase === 1) { aimedBossShot(5); bossShot(Math.PI * .75, 280, b.x - b.w * .3, b.y); bossShot(Math.PI * .25, 280, b.x + b.w * .3, b.y); } else if (b.phase === 2) { radialBossShot(16, 255); if (Math.random() < .5) bossCrossAttack(); } else { radialBossShot(22, 280); aimedBossShot(7); telegraphArea(targetPlayer(b)); bossCrossAttack(); } b.timer = b.reborn ? (b.phase === 3 ? 500 : 720) : (b.phase === 3 ? 620 : 900); }
+      if (b.timer <= 0) {
+        sfx('boss_attack');
+        if (b.phase === 1) {
+          aimedBossShot(b.reborn ? 9 : 7);
+          for (const side of [-1, 1]) for (let i = 0; i < 3; i++) bossShot(Math.PI / 2 + side * (.3 + i * .2), 310, b.x + side * b.w * .3, b.y);
+        } else if (b.phase === 2) {
+          radialBossShot(b.reborn ? 28 : 22, b.reborn ? 330 : 295); aimedBossShot(5);
+          if (Math.random() < .7) bossCrossAttack();
+        } else {
+          radialBossShot(b.reborn ? 34 : 28, b.reborn ? 350 : 315);
+          aimedBossShot(b.reborn ? 11 : 9); telegraphArea(targetPlayer(b)); bossCrossAttack();
+        }
+        b.timer = b.reborn ? (b.phase === 3 ? 360 : 500) : (b.phase === 3 ? 480 : 650);
+      }
       if (b.summonTimer <= 0 && alive.length) {
-        const cap = state.playerCount === 2 ? 12 : 9;
-        const reinforcements = b.reborn ? ['fast', 'shooter', 'tank', b.phase === 3 ? 'miniboss' : 'shooter'] : ['fast', 'shooter'];
+        const cap = state.playerCount === 2 ? 18 : 14;
+        const reinforcements = b.reborn ? ['fast', 'fast', 'shooter', 'shooter', 'tank', b.phase === 3 ? 'miniboss' : 'tank'] : ['fast', 'shooter', 'tank'];
         if (state.enemies.length < cap) sfx('boss_summon');
         reinforcements.forEach(type => { if (state.enemies.length < cap) spawnEnemy(type); });
-        b.summonTimer = b.reborn ? 2800 : 3900;
+        b.summonTimer = b.reborn ? 1800 : 2800;
       }
       if (b.reborn) {
         b.barrageTimer -= dt * 1000;
         if (b.barrageTimer <= 0) {
           // Telegraph the target before the blast; leave space to dodge the side volleys.
           telegraphArea(targetPlayer(b));
-          for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {
-            bossShot(Math.PI / 2 + side * (.25 + i * .2), 300, b.x + side * b.w * .32, b.y + 30);
+          for (const side of [-1, 1]) for (let i = 0; i < 5; i++) {
+            bossShot(Math.PI / 2 + side * (.2 + i * .16), 350, b.x + side * b.w * .32, b.y + 30);
           }
-          b.barrageTimer = b.phase === 3 ? 1900 : 2600;
+          b.barrageTimer = b.phase === 3 ? 1250 : 1750;
         }
       }
     }
@@ -493,7 +514,7 @@
   function updateHud() {
     ui.score.textContent = String(Math.floor(state.score)).padStart(6, '0'); ui.level.textContent = state.level || '—'; ui.levelName.textContent = state.level ? LEVELS[state.level - 1].name : 'EN ESPERA';
     state.players.forEach((p, i) => { const n = i + 1; $(`#p${n}HealthBar`).style.width = `${clamp(p.health / p.maxHealth, 0, 1) * 100}%`; $(`#p${n}HealthValue`).textContent = Math.ceil(p.health); $(`#p${n}UltiBar`).style.width = `${p.ulti}%`; $(`#p${n}UltiValue`).textContent = p.ulti >= 100 ? 'LISTA' : `${Math.floor(p.ulti)}%`; const dash = 1 - clamp(p.dashCooldown / p.dashBase, 0, 1); $(`#p${n}DashBar`).style.width = `${dash * 100}%`; $(`#p${n}DashValue`).textContent = dash >= 1 ? 'LISTO' : `${(p.dashCooldown / 1000).toFixed(1)}s`; $(`#p${n}State`).textContent = p.dead ? (p.reviveProgress > 0 ? `REVIVIENDO ${Math.floor(p.reviveProgress / 18)}%` : 'CAÍDO') : state.synergy ? 'ENLAZADO' : p.shield ? `ESCUDO ${p.shield}` : 'ACTIVO'; });
-    if (state.boss) { ui.bossPhase.textContent = `${state.boss.reborn ? 'RENACIDA · ' : ''}FASE ${state.boss.phase}`; const ratio = state.boss.type === 'devourer' ? state.boss.health / state.boss.maxHealth : state.boss.health / state.boss.maxHealth; ui.bossBar.style.width = `${clamp(ratio, 0, 1) * 100}%`; }
+    if (state.boss) { ui.bossPhase.textContent = state.boss.reborn ? `FASE 4 · ETAPA ${state.boss.phase}/3` : `FASE ${state.boss.phase}`; const ratio = state.boss.type === 'devourer' ? state.boss.health / state.boss.maxHealth : state.boss.health / state.boss.maxHealth; ui.bossBar.style.width = `${clamp(ratio, 0, 1) * 100}%`; }
     if (state.objective) ui.objectiveBar.style.width = `${state.objective.health / state.objective.maxHealth * 100}%`; document.querySelector('.touch-ulti')?.classList.toggle('ready', state.players[0].ulti >= 100);
   }
 
