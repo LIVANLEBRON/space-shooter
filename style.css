@@ -449,3 +449,20 @@ body.mobile-capable .ranking-table li { grid-template-columns: 30px minmax(100px
   body.mobile-capable.mobile-landscape .audio-mixer { margin-top: 8px; padding-top: 8px; }
   body.mobile-capable.mobile-landscape .top-pilots { margin-top: 7px; padding: 5px 8px; }
 }
+
+
+/* Joystick más grande y elevado para jugar cómodamente en horizontal. */
+@media (orientation: landscape) and (max-height: 520px) {
+  body.mobile-capable.mobile-landscape .touch-joystick {
+    left: max(20px, env(safe-area-inset-left));
+    bottom: max(36px, 8vh, env(safe-area-inset-bottom));
+    width: calc(var(--touch-size, 54px) * 2.6);
+    height: calc(var(--touch-size, 54px) * 2.6);
+  }
+  body.mobile-capable.mobile-landscape .touch-joystick i {
+    width: calc(var(--touch-size, 54px) * 1.05);
+    height: calc(var(--touch-size, 54px) * 1.05);
+    margin: calc(var(--touch-size, 54px) * -.525);
+  }
+  body.mobile-capable.mobile-landscape .touch-controls { --touch-size: 54px; }
+}
