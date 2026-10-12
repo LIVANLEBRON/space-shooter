@@ -76,7 +76,10 @@
   function setMusic(theme = 'flight', section = 1) { state.musicTheme = theme; return audio.setMusic(theme, section); }
 
   function resize() {
-    const dpr = Math.min(devicePixelRatio || 1, 2);
+    // En pantallas táctiles limitamos la resolución interna para evitar renderizar
+    // cuatro veces más píxeles sin una mejora visible proporcional.
+    const mobile = navigator.maxTouchPoints > 0 || matchMedia('(pointer: coarse)').matches;
+    const dpr = Math.min(devicePixelRatio || 1, mobile ? 1.35 : 2);
     canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr);
     canvas.style.width = `${innerWidth}px`; canvas.style.height = `${innerHeight}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); createStars();
@@ -400,7 +403,17 @@
     }
   }
 
-  function burst(x, y, count, color, speed = 180, ring = false) { for (let i = 0; i < count; i++) { const angle = random(0, 6.28), velocity = random(speed * .3, speed); state.particles.push({ x, y, vx: Math.cos(angle) * velocity, vy: Math.sin(angle) * velocity, life: random(260, 700), maxLife: 700, size: random(1.2, 4.6), color, ring: false, streak: Math.random() < .32 }); } if (ring) state.particles.push({ x, y, vx: 0, vy: 0, life: 380, maxLife: 380, size: 6, color, ring: true }); if (state.particles.length > 900) state.particles.splice(0, state.particles.length - 900); }
+  function burst(x, y, count, color, speed = 180, ring = false) {
+    const mobile = navigator.maxTouchPoints > 0 || matchMedia('(pointer: coarse)').matches;
+    const particleLimit = mobile ? 460 : 900;
+    const particleCount = mobile ? Math.ceil(count * .78) : count;
+    for (let i = 0; i < particleCount; i++) {
+      const angle = random(0, 6.28), velocity = random(speed * .3, speed);
+      state.particles.push({ x, y, vx: Math.cos(angle) * velocity, vy: Math.sin(angle) * velocity, life: random(260, 700), maxLife: 700, size: random(1.2, 4.6), color, ring: false, streak: Math.random() < .32 });
+    }
+    if (ring) state.particles.push({ x, y, vx: 0, vy: 0, life: 380, maxLife: 380, size: 6, color, ring: true });
+    if (state.particles.length > particleLimit) state.particles.splice(0, state.particles.length - particleLimit);
+  }
 
   function destroyEnemy(enemy, index, owner = 0) {
     state.enemies.splice(index, 1); state.score += enemy.score; state.combo = state.comboTimer > 0 ? state.combo + 1 : 1; state.comboTimer = 1800;
@@ -412,7 +425,8 @@
   }
 
   function updateInputs() {
-    updatePadDisplay(); state.players.forEach(player => {
+    // update() ya sincroniza los mandos una sola vez por fotograma.
+    state.players.forEach(player => {
       if (!player.active || player.dead) return; const pad = padForPlayer(player.id);
       if (player.id === 1) {
         if (padJustPressed(player, pad, state.p2Mapping.dash)) dash(player);
