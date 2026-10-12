@@ -45,7 +45,17 @@
   }
   function startSensor() { if (!capable || sensorPermission !== 'granted' || sensorListening) return; addEventListener('deviceorientation', onOrientation, { passive: true }); sensorListening = true; sensorStartedAt = performance.now(); }
   function stopSensor() { if (sensorListening) removeEventListener('deviceorientation', onOrientation); sensorListening = false; filtered = { x: 0, y: 0 }; }
-  function syncSensorLifecycle() { if (settings.movement === 'tilt' && sensorPermission === 'granted' && (selectedGameVisible() || $('#optionsScreen').classList.contains('visible'))) startSensor(); else stopSensor(); }
+  function syncSensorLifecycle() {
+    const shouldListen = settings.movement === 'tilt' && (selectedGameVisible() || $('#optionsScreen').classList.contains('visible'));
+    if (shouldListen && sensorPermission === 'idle' && capabilities.orientation && typeof DeviceOrientationEvent.requestPermission !== 'function') {
+      // Android y otros navegadores no requieren permiso explícito: activar el sensor al empezar a jugar.
+      sensorPermission = 'granted';
+      center = null;
+      filtered = { x: 0, y: 0 };
+    }
+    if (shouldListen && sensorPermission === 'granted') startSensor();
+    else stopSensor();
+  }
   async function requestSensor() {
     if (!isSecureContext && !['localhost', '127.0.0.1'].includes(location.hostname)) return useJoystick('El sensor requiere HTTPS. Usando joystick táctil.');
     if (!capabilities.orientation) return useJoystick('Sensor no disponible. Usando joystick táctil.');
