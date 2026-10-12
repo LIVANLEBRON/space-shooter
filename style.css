@@ -398,3 +398,54 @@ body.mobile-capable .ranking-table li { grid-template-columns: 30px minmax(100px
 
 /* Keep final-boss progress readable in both ranking layouts. */
 .top-pilots li span:nth-child(3), .ranking-table li span:nth-child(3) { font-size: 9px; overflow-wrap: anywhere; }
+
+
+/* Ajustes de juego en horizontal: más área útil, HUD compacto y controles separados. */
+@media (orientation: landscape) and (max-height: 520px) {
+  body.mobile-capable.mobile-landscape #game { height: 100dvh; width: 100dvw; }
+  body.mobile-capable.mobile-landscape .campaign-hud {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    padding: max(7px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left));
+    align-items: start;
+  }
+  body.mobile-capable.mobile-landscape .mission-box { grid-row: auto; grid-column: auto; margin-top: 0; min-width: 0; }
+  body.mobile-capable.mobile-landscape .mission-box strong { font-size: 10px; }
+  body.mobile-capable.mobile-landscape .player-hud {
+    left: max(10px, env(safe-area-inset-left)); bottom: max(8px, env(safe-area-inset-bottom));
+    transform: scale(.72); transform-origin: bottom left;
+  }
+  body.mobile-capable.mobile-landscape[data-mobile-movement="joystick"] .player-hud {
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + var(--touch-size, 44px) * 1.55);
+  }
+  body.mobile-capable.mobile-landscape .touch-controls { --touch-size: 44px; }
+  body.mobile-capable.mobile-landscape .touch-controls button { width: var(--touch-size); height: var(--touch-size); font-size: 9px; }
+  body.mobile-capable.mobile-landscape .touch-dpad {
+    width: calc(var(--touch-size) * 3); grid-template-columns: repeat(3, var(--touch-size));
+    grid-template-rows: repeat(2, var(--touch-size));
+  }
+  body.mobile-capable.mobile-landscape .touch-actions { grid-template-columns: repeat(2, var(--touch-size)); gap: 4px; }
+  body.mobile-capable.mobile-landscape .touch-actions .touch-fire {
+    width: calc(var(--touch-size) * 1.12); height: calc(var(--touch-size) * 1.12);
+  }
+  body.mobile-capable.mobile-landscape .boss-hud { top: max(55px, 12vh); width: min(420px, 58vw); }
+  body.mobile-capable.mobile-landscape .objective-hud { top: 24%; width: min(150px, 22vw); }
+  body.mobile-capable.mobile-landscape .screen { padding: 42px 16px 12px; overflow-y: auto; }
+  body.mobile-capable.mobile-landscape .menu-panel { width: min(760px, 96vw); }
+  body.mobile-capable.mobile-landscape .menu-panel h1 { font-size: clamp(38px, 10vh, 64px); line-height: .8; }
+  body.mobile-capable.mobile-landscape .menu-panel .lead { margin: 10px auto; }
+  body.mobile-capable.mobile-landscape .pilot-roster {
+    top: 6px; width: min(640px, 88vw); grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px;
+  }
+  body.mobile-capable.mobile-landscape .pilot-profile { padding: 4px 6px; grid-template-columns: 22px minmax(0, 1fr) 24px; gap: 5px; }
+  body.mobile-capable.mobile-landscape .pilot-ship { font-size: 17px; }
+  body.mobile-capable.mobile-landscape .pilot-profile strong { font-size: 9px; }
+  body.mobile-capable.mobile-landscape .pilot-profile small,
+  body.mobile-capable.mobile-landscape .pilot-profile em { font-size: 6px; }
+  body.mobile-capable.mobile-landscape .pilot-profile .pilot-edit { width: 22px; height: 22px; line-height: 22px; }
+  body.mobile-capable.mobile-landscape .menu-panel > .eyebrow { margin: 6px 0; }
+  body.mobile-capable.mobile-landscape .gamepad-count { margin: 0 0 8px; padding: 4px 8px; }
+  body.mobile-capable.mobile-landscape .menu-actions { gap: 6px; }
+  body.mobile-capable.mobile-landscape .menu-actions button { width: min(190px, 30vw); line-height: 38px; font-size: 10px; }
+  body.mobile-capable.mobile-landscape .audio-mixer { margin-top: 8px; padding-top: 8px; }
+  body.mobile-capable.mobile-landscape .top-pilots { margin-top: 7px; padding: 5px 8px; }
+}
